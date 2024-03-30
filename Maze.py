@@ -5,7 +5,7 @@ class Grid:
     def __init__(self, rows, cols):
         self.rows = rows
         self.cols = cols
-        self.grid = [[0 for _ in range(cols)] for _ in range(rows)]  # Initialize grid with all white cells
+        self.grid = [[0 for i in range(cols)] for i in range(rows)]  # Initialize grid with all white cells
 
     def generate_random_black_cells(self, num_black_cells):
         # Generate random black cells

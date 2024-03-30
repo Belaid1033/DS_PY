@@ -1,4 +1,5 @@
 import random
+import tkinter as tk
 
 class Grid:
     def __init__(self, rows, cols):
@@ -41,7 +42,7 @@ num_black_cells = 30
 grid = Grid(rows, cols)
 grid.generate_random_black_cells(num_black_cells)
 grid.display_grid()
-import tkinter as tk
+
 
 class GridGUI:
     def __init__(self, master, grid):

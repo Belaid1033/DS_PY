@@ -33,11 +33,41 @@ class Grid:
         # Display the grid
         for row in self.grid:
             print(" ".join(map(str, row)))
+    def is_adjacent_white(self, row, col):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Horizontal and vertical directions
+        for dr, dc in directions:
+            new_row, new_col = row + dr, col + dc
+            if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.is_white(new_row, new_col):
+                return True
+        return False
+
+    def are_all_white_cells_connected(self):
+        visited = set()
+
+        def dfs(row, col):
+            if (row, col) in visited:
+                return
+            visited.add((row, col))
+            directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            for dr, dc in directions:
+                new_row, new_col = row + dr, col + dc
+                if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.is_white(new_row, new_col):
+                    dfs(new_row, new_col)
+
+        # Find a white cell as the starting point
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if self.is_white(row, col):
+                    dfs(row, col)
+                    break
+
+        # If all white cells are visited, they are connected
+        return len(visited) == sum(row.count(0) for row in self.grid)
 
 # Example usage
 rows = 10
 cols = 10
-num_black_cells = 30
+num_black_cells = 25
 
 grid = Grid(rows, cols)
 grid.generate_random_black_cells(num_black_cells)
@@ -58,9 +88,13 @@ class GridGUI:
                 x2, y2 = x1 + 30, y1 + 30
                 color = "black" if self.grid.is_black(row, col) else "white"
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
-
+if grid.are_all_white_cells_connected():
+    print("Les cases blanches sont connectées entre elles.")
+else:
+    print("Les cases blanches ne sont pas connectées entre elles.")
 # Example usage
 root = tk.Tk()
 grid_gui = GridGUI(root, grid)
 grid_gui.draw_grid()
 root.mainloop()
+

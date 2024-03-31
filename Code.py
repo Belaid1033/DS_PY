@@ -58,19 +58,17 @@ class Grid:
     def find_shortest_paths(self, start, end, max_paths=4):
         paths = []
         queue = deque([(start, [])])
-        visited = set()
+        visited = set([start])  # Ajoutez le nœud de départ aux nœuds visités
 
         while queue and len(paths) < max_paths:
             current, path = queue.popleft()
             if current == end:
                 paths.append(path + [current])
 
-            if current in visited:
-                continue
-
-            visited.add(current)
             for neighbor in self.get_adjacent_white_cells(current):
-                queue.append((neighbor, path + [current]))
+                if neighbor not in visited:  # Vérifiez si le voisin n'a pas été visité
+                    queue.append((neighbor, path + [current]))
+                    visited.add(neighbor)  # Ajoutez le voisin aux nœuds visités
 
         return paths
 
@@ -107,7 +105,7 @@ class GridGUI:
                         color = start_color
                     elif (row, col) == path[-1]:
                         color = end_color
-                    elif (row, col) in path:
+                    elif (row, col) in path[1:-1]:  # Exclude the first and last cells of the path
                         color = "yellow"
                     elif self.grid.is_black(row, col):
                         color = "black"
@@ -156,8 +154,8 @@ def run_program():
     grid_gui = GridGUI(root, grid)
 
     # Trouver jusqu'à 4 chemins les plus courts
-    start_cell = (0, 0)  
-    end_cell = (rows - 1, cols - 1)  
+    start_cell = (random.randint(0, rows-1), random.randint(0, cols-1))
+    end_cell = (random.randint(0, rows-1), random.randint(0, cols-1))
     shortest_paths = grid.find_shortest_paths(start_cell, end_cell)
 
     grid_gui.draw_grid(shortest_paths)

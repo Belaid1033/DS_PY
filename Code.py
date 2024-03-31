@@ -1,14 +1,16 @@
 import random
 import tkinter as tk
+from collections import deque
 
 class Grid:
-    def __init__(self, rows, cols):
+    def __init__(self, rows, cols):  
         self.rows = rows
         self.cols = cols
-        self.grid = [[0 for i in range(cols)] for i in range(rows)]  # Initialize grid with all white cells
+        self.grid = [[0 for i in range(cols)] for i in range(rows)]
 
     def generate_random_black_cells(self, num_black_cells):
-        black_cells = random.sample([(r, c) for r in range(self.rows) for c in range(self.cols)], num_black_cells)
+        black_cells = random.sample([(r, c) for r in range(
+            self.rows) for c in range(self.cols)], num_black_cells)
         for cell in black_cells:
             self.grid[cell[0]][cell[1]] = 1
 
@@ -21,9 +23,9 @@ class Grid:
     def display_grid(self):
         for row in self.grid:
             print(" ".join(map(str, row)))
-            
+
     def is_adjacent_white(self, row, col):
-        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Horizontal and vertical directions
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
             if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.is_white(new_row, new_col):
@@ -43,7 +45,6 @@ class Grid:
                 if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.is_white(new_row, new_col):
                     dfs(new_row, new_col)
 
-        # Find a white cell as the starting point
         start_row, start_col = -1, -1
         for row in range(self.rows):
             for col in range(self.cols):
@@ -53,37 +54,77 @@ class Grid:
             if start_row != -1:
                 break
 
-        # If there is no white cell, they are considered connected
         if start_row == -1:
             return True
 
-        # Start DFS from the first white cell
         dfs(start_row, start_col)
 
-        # If all white cells are visited, they are connected
         return len(visited) == sum(row.count(0) for row in self.grid)
 
+    def find_shortest_paths(self, start, end, max_paths=4):
+        paths = []
+        queue = deque([(start, [])])
+        visited = set()
+
+        while queue and len(paths) < max_paths:
+            current, path = queue.popleft()
+            if current == end:
+                paths.append(path + [current])
+
+            if current in visited:
+                continue
+
+            visited.add(current)
+            for neighbor in self.get_adjacent_white_cells(current):
+                queue.append((neighbor, path + [current]))
+
+        return paths
+
+    def get_adjacent_white_cells(self, cell):
+        row, col = cell
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        adjacent_cells = []
+        for dr, dc in directions:
+            new_row, new_col = row + dr, col + dc
+            if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.is_white(new_row, new_col):
+                adjacent_cells.append((new_row, new_col))
+        return adjacent_cells
+
+
 class GridGUI:
-    def __init__(self, master, grid):
+    def __init__(self, master, grid):  
         self.master = master
         self.grid = grid
-        self.canvas = tk.Canvas(master, width=cols*30, height=rows*30)
+        self.canvas = tk.Canvas(
+            master, width=grid.cols*30, height=grid.rows*30)
         self.canvas.pack()
 
-    def draw_grid(self):
-        for row in range(rows):
-            for col in range(cols):
-                x1, y1 = col*30, row*30
-                x2, y2 = x1 + 30, y1 + 30
-                color = "black" if self.grid.is_black(row, col) else "white"
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
+    def draw_grid(self, paths):
+        for path in paths:
+            if len(path) == 0:
+                continue
+            for row in range(self.grid.rows):
+                for col in range(self.grid.cols):
+                    x1, y1 = col * 30, row * 30
+                    x2, y2 = x1 + 30, y1 + 30
+                    if (row, col) in path:
+                        color = "yellow"
+                    elif self.grid.is_black(row, col):
+                        color = "black"
+                    else:
+                        color = "white"
+                    self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
+
 
 def display_results():
     grid.display_grid()
     if grid.are_all_white_cells_connected():
-        result_label.config(text="Les cases blanches sont connectées entre elles.")
+        result_label.config(
+            text="Les cases blanches sont connectées entre elles.")
     else:
-        result_label.config(text="Les cases blanches ne sont pas connectées entre elles.")
+        result_label.config(
+            text="Les cases blanches ne sont pas connectées entre elles.")
+
 
 # Example usage
 rows = 10
@@ -95,7 +136,13 @@ grid.generate_random_black_cells(num_black_cells)
 
 root = tk.Tk()
 grid_gui = GridGUI(root, grid)
-grid_gui.draw_grid()
+
+# Trouver jusqu'à 4 chemins les plus courts
+start_cell = (0, 0)  
+end_cell = (9, 9)    
+shortest_paths = grid.find_shortest_paths(start_cell, end_cell, max_paths=4)
+
+grid_gui.draw_grid(shortest_paths)
 
 result_label = tk.Label(root)
 result_label.pack()

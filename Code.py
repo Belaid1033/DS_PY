@@ -1,5 +1,6 @@
 import random
 import tkinter as tk
+from tkinter import messagebox
 from collections import deque
 from PIL import Image, ImageDraw
 import os
@@ -158,16 +159,20 @@ def run_program():
     end_cell = (random.randint(0, rows-1), random.randint(0, cols-1))
     shortest_paths = grid.find_shortest_paths(start_cell, end_cell)
 
-    grid_gui.draw_grid(shortest_paths)
+    if shortest_paths:
+        grid_gui.draw_grid(shortest_paths)
 
-    result_label = tk.Label(root)
-    result_label.pack()
+        result_label = tk.Label(root)
+        result_label.pack()
 
-    display_results(grid, result_label)
+        display_results(grid, result_label)
 
-    username = input("Entrez votre nom d'utilisateur : ")
-    folder_path = r"C:\Users\MOHA BOUTA\OneDrive - uca.ac.ma\Bureau\ds"
-    grid_gui.save_image(shortest_paths, username, folder_path)
+        username = input("Entrez votre nom d'utilisateur : ")
+        folder_path = r"C:\Users\MOHA BOUTA\OneDrive - uca.ac.ma\Bureau\ds"
+        grid_gui.save_image(shortest_paths, username, folder_path)
+
+    else:
+        messagebox.showinfo("Information", "Aucun chemin trouvé entre les cellules de départ et d'arrivée.")
 
     root.mainloop()
 

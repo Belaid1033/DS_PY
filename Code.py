@@ -3,9 +3,10 @@ import tkinter as tk
 from collections import deque
 
 class Grid:
-    def __init__(self, rows, cols):  
+    def __init__(self, rows, cols):  # Correction ici
         self.rows = rows
         self.cols = cols
+        # Initialize grid with all white cells
         self.grid = [[0 for i in range(cols)] for i in range(rows)]
 
     def generate_random_black_cells(self, num_black_cells):
@@ -25,6 +26,7 @@ class Grid:
             print(" ".join(map(str, row)))
 
     def is_adjacent_white(self, row, col):
+        # Horizontal and vertical directions
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
@@ -45,6 +47,7 @@ class Grid:
                 if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.is_white(new_row, new_col):
                     dfs(new_row, new_col)
 
+        # Find a white cell as the starting point
         start_row, start_col = -1, -1
         for row in range(self.rows):
             for col in range(self.cols):
@@ -54,22 +57,24 @@ class Grid:
             if start_row != -1:
                 break
 
+        # If there is no white cell, they are considered connected
         if start_row == -1:
             return True
 
+        # Start DFS from the first white cell
         dfs(start_row, start_col)
 
+        # If all white cells are visited, they are connected
         return len(visited) == sum(row.count(0) for row in self.grid)
 
-    def find_shortest_paths(self, start, end, max_paths=4):
-        paths = []
+    def find_shortest_path(self, start, end):
         queue = deque([(start, [])])
         visited = set()
 
-        while queue and len(paths) < max_paths:
+        while queue:
             current, path = queue.popleft()
             if current == end:
-                paths.append(path + [current])
+                return path + [current]
 
             if current in visited:
                 continue
@@ -78,10 +83,11 @@ class Grid:
             for neighbor in self.get_adjacent_white_cells(current):
                 queue.append((neighbor, path + [current]))
 
-        return paths
+        return None
 
     def get_adjacent_white_cells(self, cell):
         row, col = cell
+        # Horizontal and vertical directions
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         adjacent_cells = []
         for dr, dc in directions:
@@ -92,28 +98,25 @@ class Grid:
 
 
 class GridGUI:
-    def __init__(self, master, grid):  
+    def __init__(self, master, grid):  # Correction ici
         self.master = master
         self.grid = grid
         self.canvas = tk.Canvas(
             master, width=grid.cols*30, height=grid.rows*30)
         self.canvas.pack()
 
-    def draw_grid(self, paths):
-        for path in paths:
-            if len(path) == 0:
-                continue
-            for row in range(self.grid.rows):
-                for col in range(self.grid.cols):
-                    x1, y1 = col * 30, row * 30
-                    x2, y2 = x1 + 30, y1 + 30
-                    if (row, col) in path:
-                        color = "yellow"
-                    elif self.grid.is_black(row, col):
-                        color = "black"
-                    else:
-                        color = "white"
-                    self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
+    def draw_grid(self, shortest_path):
+        for row in range(self.grid.rows):
+            for col in range(self.grid.cols):
+                x1, y1 = col*30, row*30
+                x2, y2 = x1 + 30, y1 + 30
+                if shortest_path is not None and (row, col) in shortest_path:
+                    color = "yellow"  # Utiliser la couleur jaune pour le chemin le plus court
+                elif self.grid.is_black(row, col):
+                    color = "black"
+                else:
+                    color = "white"
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
 
 
 def display_results():
@@ -137,12 +140,12 @@ grid.generate_random_black_cells(num_black_cells)
 root = tk.Tk()
 grid_gui = GridGUI(root, grid)
 
-# Trouver jusqu'à 4 chemins les plus courts
-start_cell = (0, 0)  
-end_cell = (9, 9)    
-shortest_paths = grid.find_shortest_paths(start_cell, end_cell, max_paths=4)
+# Trouver le chemin le plus court
+start_cell = (0, 0)  # Coordonnées du point de départ (vert)
+end_cell = (9, 9)    # Coordonnées du point d'arrivée (rouge)
+shortest_path = grid.find_shortest_path(start_cell, end_cell)
 
-grid_gui.draw_grid(shortest_paths)
+grid_gui.draw_grid(shortest_path)
 
 result_label = tk.Label(root)
 result_label.pack()
